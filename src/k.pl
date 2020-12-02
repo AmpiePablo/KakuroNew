@@ -1,4 +1,24 @@
 
+/*
+ * spacegen
+ *
+ * Entradas:
+ *     Filas y Columnas
+ *
+ * Salidas:
+ *     Se establecen hechos de cuáles
+ *     espacios son en blanco en la
+ *     base de conocimiento.
+ *
+ * Restricciones:
+ *     N y M deben ser números
+ *     enteros positivos
+ *
+ * Objetivo:
+ *     Definir aleatoriamente el
+ *     conjunto de espacios del kakuro.
+ *
+ */
 
 spacegen(N, M) :-
     spacegen_tophalf(N, M),
@@ -9,6 +29,7 @@ spacegen(N, M) :-
     fixlongvertical(N, M),
     fixlongmidhorizontal(N, M),
     fixlongmidvertical(N, M).
+
 
 
 spacegen_tophalf(N, M) :-
@@ -255,6 +276,27 @@ check1ss(I, J) :-
     ;   true
     ).
 
+/*
+ * printspaces
+ *
+ * Entradas:
+ *     Filas y Columnas
+ *
+ * Salidas:
+ *     Se imprime el conjunto de
+ *     espacios del tablero kakuro
+ *
+ * Restricciones:
+ *     N y M deben ser números
+ *     enteros positivos
+ *
+ * Objetivo:
+ *     Permitir la visualización
+ *     del patrón de espacios del
+ *     kakuro
+ *
+ */
+
 
 printspaces(N, M) :-
     printspaces(0, 0, N, M).
@@ -274,6 +316,27 @@ printspaces(I, J, N, M) :-
         printspaces(I, J1, N, M)
     ).
 
+/*
+ * reset
+ *
+ * Entradas:
+ *     Filas y Columnas
+ *
+ * Salidas:
+ *     Se reestablecen hechos en
+ *     la base de conocimiento
+ *
+ * Restricciones:
+ *     N y M deben ser números
+ *     enteros positivos
+ *
+ * Objetivo:
+ *     Reestablecer los hechos
+ *     relacionados al juego actual
+ *     de kakuro
+ *
+ */
+
 
 reset(N, M) :-
     reset(0, 0, N, M).
@@ -292,9 +355,27 @@ reset(I, J, N, M) :-
 
 
 /****************************************************
- *                 definir soluciÃ³n
+ *                 definir solución
  ****************************************************/
 
+/*
+ * sum
+ *
+ * Entradas:
+ *     Una lista
+ *
+ * Salidas:
+ *     Un número
+ *
+ * Restricciones:
+ *     L debe ser una lista de
+ *     números
+ *
+ * Objetivo:
+ *     Sumar todos los elementos
+ *     de la lista
+ *
+ */
 
 
 sum(L, R) :-
@@ -303,6 +384,23 @@ sum(L, R) :-
         R is H+S
     ;   R is 0
     ).
+
+/*
+ * shuffle
+ *
+ * Entradas:
+ *     Una lista
+ *
+ * Salidas:
+ *     Una lista
+ *
+ * Objetivo:
+ *     Generar una lista con
+ *     los mismos elementos de
+ *     la lista pero en orden
+ *     aleatorio.
+ *
+ */
 
 
 shuffle(L, R) :-
@@ -320,6 +418,25 @@ shuffle(L, Len, R) :-
     ;   R = L
     ).
 
+/*
+ * extract
+ *
+ * Entradas:
+ *     Una lista, Un entero
+ *
+ * Salidas:
+ *     Una lista, Un entero
+ *
+ * Objetivo:
+ *     Tomar una lista y una
+ *     posición en esa lista,
+ *     y retornar el elemento
+ *     a la posición de la lista
+ *     y la lista sin ese elemento
+ *
+ */
+
+
 extract(L, I, RL, RE) :-
     (   [H|T] = L
     ->  (   I =:= 1
@@ -332,8 +449,22 @@ extract(L, I, RL, RE) :-
     ;   RL = []
     ).
 
-
-
+/*
+ * getcolumn
+ *
+ * Entradas:
+ *     Dos indices
+ *
+ * Salidas:
+ *     Un punto
+ *
+ * Objetivo:
+ *     Conseguir el punto donde
+ *     se ubicaría la pista para
+ *     la actual "columna" de
+ *     kakuro
+ *
+ */
 
 
 getcolumn(I, J, RC) :-
@@ -343,7 +474,22 @@ getcolumn(I, J, RC) :-
         getcolumn(Im1, J, RC)
     ).
 
-
+/*
+ * getrow
+ *
+ * Entradas:
+ *     Dos indices
+ *
+ * Salidas:
+ *     Un punto
+ *
+ * Objetivo:
+ *     Conseguir el punto donde
+ *     se ubicaría la pista para
+ *     la actual "fila" de
+ *     kakuro
+ *
+ */
 
 
 getrow(I, J, RR) :-
@@ -361,6 +507,45 @@ getrow(I, J, RR) :-
  *             EL  PLAN   B
  ********************************************
  */
+
+verificar(E, Sol, R) :-
+    verificar(E, Sol, Inc, Vac, Tot),
+    (   Inc =:= 0, Vac =:= 0
+    ->  R = "Juego finalizado exitosamente, felicidades!!1"
+    ;   number_string(Inc, SI),
+        number_string(Vac, SV),
+        number_string(Tot, ST),
+        string_concat("Hay ", SI, S1),
+        string_concat(S1, " digito(s) incorrecto(s) y hay ", S2),
+        string_concat(S2, SV, S3),
+        string_concat(S3, " celda(s) vacia(s) de ", S4),
+        string_concat(S4, ST, S5),
+        string_concat(S5, ".", R)
+    ).
+
+verificar(E, Sol, Inc, Vac, Tot) :-
+    (   [RowH | RowsT] = E
+    ->  [SRowH | SRowsT] = Sol,
+        (   [SqH | SqsT] = RowH
+        ->  [SSqH | SSqsT] = SRowH,
+            (   SqH == n
+            ->  verificar([SqsT | RowsT], [SSqsT | SRowsT], Inc, Vac, Tot)
+            ;   verificar([SqsT | RowsT], [SSqsT | SRowsT], IR, VR, TR),
+                (   SqH =:= 0
+                ->  Inc is IR, Vac is VR + 1
+                ;   (   SqH =\= SSqH
+                    ->  Inc is IR + 1, Vac is VR
+                    ;   Inc is IR, Vac is VR
+                    )
+                ),
+                Tot is TR + 1
+            )
+        ;   verificar(RowsT, SRowsT, Inc, Vac, Tot)
+        )
+    ;   Inc is 0,
+        Vac is 0,
+        Tot is 0
+    ).
 
 asignar(I, J, N) :-
     retract(num(I, J, _)),
@@ -512,6 +697,13 @@ getkakuro(I, J, N, M, R) :-
             )
         )
     ).
+
+
+printlist(L) :-
+    [H | T] = L ->
+    writeln(H),
+    printlist(T);
+    true.
 
 
 
